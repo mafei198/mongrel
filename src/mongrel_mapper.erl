@@ -327,8 +327,6 @@ unmap_tuple(Tuple, MapReferenceFun) ->
 			unmap(Type, MapReferenceFun(Type, Id), MapReferenceFun);
 		[?TYPE_REF, Type|Fields] when is_atom(Type) ->
 			unmap(Type, list_to_tuple(Fields), MapReferenceFun);
-		[?TYPE_REF, Type|Fields] when is_binary(Type) ->
-      unmap(list_to_atom(binary_to_list(Type)), list_to_tuple(Fields), MapReferenceFun);
 		_ ->
 			Tuple
 	end.
