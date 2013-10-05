@@ -325,7 +325,7 @@ unmap_tuple(Tuple, MapReferenceFun) ->
 	case TupleAsList of
 		[?TYPE_REF, Type, ?ID_REF, Id|_] ->
 			unmap(Type, MapReferenceFun(Type, Id), MapReferenceFun);
-		[?TYPE_REF, Type|Fields] when is_atom(Type) ->
+		[?TYPE_REF, Type|Fields] ->
 			unmap(Type, list_to_tuple(Fields), MapReferenceFun);
 		_ ->
 			Tuple
