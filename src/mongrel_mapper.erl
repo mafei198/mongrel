@@ -22,7 +22,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, 
+-export([start_link/1,
 		 add_mapping/1,
 		 add_mappings/1,
 		 get_mapping/1,
@@ -38,11 +38,11 @@
 		 map_modifier/2]).
 
 %% gen_server callbacks
--export([init/1, 
-		 handle_call/3, 
-		 handle_cast/2, 
-		 handle_info/2, 
-		 terminate/2, 
+-export([init/1,
+		 handle_call/3,
+		 handle_cast/2,
+		 handle_info/2,
+		 terminate/2,
 		 code_change/3]).
 
 -define(SERVER, ?MODULE).
@@ -57,7 +57,7 @@
 
 %% @doc Spawns a registered process on the local node that stores the structure of records in an ETS table.
 %%
-%% @spec start_link(integer()) -> {ok, pid()}    
+%% @spec start_link(integer()) -> {ok, pid()}
 %% @end
 start_link(EtsTableId) ->
 	gen_server:start_link({local, ?SERVER}, ?MODULE, [EtsTableId], []).
@@ -113,7 +113,7 @@ has_id(RecordName) when is_atom(RecordName) ->
 	lists:foldl(CheckHasId, false, FieldIds);
 has_id(Record) when is_tuple(Record), size(Record) > 0 ->
 	[RecordName|FieldValues] = tuple_to_list(Record),
-	has_id(RecordName) andalso length(FieldValues) =:= length(get_mapping(RecordName)). 
+	has_id(RecordName) andalso length(FieldValues) =:= length(get_mapping(RecordName)).
 
 %% @doc Gets the value of a field from a record.
 -spec(get_field(record(), atom()) -> any()).
@@ -166,7 +166,7 @@ unmap(RecordName, Document, MapReferenceFun) when is_atom(RecordName) ->
 	unmap_record(DocumentList, MapReferenceFun, InitialDocument).
 
 %% @doc Maps a selector specifying fields to match to a document. Nested records are "flattened" using the
-%%      dot notation, e.g. 
+%%      dot notation, e.g.
 %%      #foo{bar = #baz{x = 3}} is mapped to the document {'bar.x', 3}.
 -spec(map_selector(record()) -> {Collection::atom, bson:document()}).
 map_selector(SelectorRecord) when is_tuple(SelectorRecord) ->
@@ -180,9 +180,9 @@ map_selector(SelectorRecord) when is_tuple(SelectorRecord) ->
 			%% An 'advanced' selector is a document of the form {'$query': Query, OptionKey: OptionValue}
 			map_advanced_selector({false, undefined, []}, tuple_to_list(SelectorRecord))
 	end.
-			
+
 %% @doc Maps a projection specifying fields to select in a document. Nested records are "flattened" using the
-%%      dot notation, e.g. 
+%%      dot notation, e.g.
 %%      #foo{bar = #baz{x = 1}} is mapped to the document {'bar.x', 1}.
 -spec(map_projection(record()) -> bson:document()).
 map_projection(ProjectionRecord) ->
@@ -325,8 +325,10 @@ unmap_tuple(Tuple, MapReferenceFun) ->
 	case TupleAsList of
 		[?TYPE_REF, Type, ?ID_REF, Id|_] ->
 			unmap(Type, MapReferenceFun(Type, Id), MapReferenceFun);
-		[?TYPE_REF, Type|Fields] ->
+		[?TYPE_REF, Type|Fields] when is_atom(Type) ->
 			unmap(Type, list_to_tuple(Fields), MapReferenceFun);
+		[?TYPE_REF, Type|Fields] when is_binary(Type) ->
+      unmap(list_to_atom(binary_to_list(Type)), list_to_tuple(Fields), MapReferenceFun);
 		_ ->
 			Tuple
 	end.
@@ -403,7 +405,7 @@ map_list_values([Value|Tail], Result) ->
 			map_list_values(Tail, Result ++ [Value]);
 		true ->
 			{MappedValue, _ChildDocs} = map_value(Value, []),
-			map_list_values(Tail, Result ++ [MappedValue])	
+			map_list_values(Tail, Result ++ [MappedValue])
 	end.
 
 assert_id_is_set(Collection, []) ->
